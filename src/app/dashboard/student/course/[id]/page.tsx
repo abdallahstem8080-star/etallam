@@ -261,63 +261,65 @@ export default function CoursePlayerPage() {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-background text-foreground">
-        <p className="text-zinc-500">جاري تحميل الكورس...</p>
+      <div className="h-screen flex items-center justify-center bg-[#F8FAFC]">
+        <p className="text-[#475569]">جاري تحميل الكورس...</p>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="h-screen flex items-center justify-center bg-background text-foreground">
-        <p className="text-red-400">{error}</p>
+      <div className="h-screen flex items-center justify-center bg-[#F8FAFC]">
+        <p className="text-red-600">{error}</p>
       </div>
     )
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
-      <header className="h-[60px] shrink-0 flex items-center justify-between px-6 border-b border-navy-border">
+    <div className="h-screen flex flex-col bg-[#F8FAFC] text-[#0F172A] overflow-hidden" dir="rtl">
+      {/* الهيدر */}
+      <header className="h-[60px] shrink-0 flex items-center justify-between px-6 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] z-10">
         <div className="flex items-center gap-3 min-w-0">
-          <Link href="/" className="text-lg font-bold text-gold-light shrink-0">
-            اتعلم
+          <Link href="/" className="text-lg font-bold shrink-0">
+            <span className="text-[#0F172A]">اتعل</span>
+            <span className="text-[#D97706]">م</span>
           </Link>
-          <span className="text-zinc-600 hidden sm:inline">/</span>
-          <span className="text-xs sm:text-sm text-zinc-400 truncate hidden sm:inline">
+          <span className="text-[#CBD5E1] hidden sm:inline">/</span>
+          <span className="text-xs sm:text-sm text-[#475569] truncate hidden sm:inline">
             الكورسات {subject && `> ${subject.name}`} {course && `> ${course.title}`}
           </span>
         </div>
 
         <div className="hidden md:flex items-center gap-3 flex-1 max-w-xs mx-6">
-          <div className="flex-1 h-2 bg-navy-card rounded-full overflow-hidden border border-navy-border">
+          <div className="flex-1 h-2 bg-[#E2E8F0] rounded-full overflow-hidden">
             <div
-              className="h-full bg-gold transition-all"
+              className="h-full bg-[#D97706] transition-all"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-          <span className="text-xs text-zinc-400 shrink-0">{progressPercent}%</span>
+          <span className="text-xs text-[#475569] shrink-0">{progressPercent}%</span>
         </div>
 
         <div className="flex items-center gap-4 shrink-0 relative">
-          <button className="text-zinc-400 hover:text-gold transition text-lg">🔔</button>
+          <button className="text-[#475569] hover:text-[#D97706] transition text-lg">🔔</button>
           <button
             onClick={() => setAvatarOpen(!avatarOpen)}
-            className="w-8 h-8 rounded-full bg-gold text-background font-bold flex items-center justify-center text-sm"
+            className="w-8 h-8 rounded-full bg-[#D97706] text-white font-bold flex items-center justify-center text-sm"
           >
             {userName ? userName[0] : '?'}
           </button>
 
           {avatarOpen && (
-            <div className="absolute left-0 top-12 bg-navy-card border border-navy-border rounded-lg shadow-lg w-44 py-2 z-20">
+            <div className="absolute left-0 top-12 bg-white border border-[#E2E8F0] rounded-lg shadow-lg w-44 py-2 z-20">
               <Link
                 href="/dashboard/student"
-                className="block px-4 py-2 text-sm text-zinc-300 hover:text-gold"
+                className="block px-4 py-2 text-sm text-[#0F172A] hover:bg-[#F1F5F9]"
               >
                 لوحتي الرئيسية
               </Link>
               <button
                 onClick={handleLogout}
-                className="w-full text-right px-4 py-2 text-sm text-red-400 hover:text-red-300"
+                className="w-full text-right px-4 py-2 text-sm text-red-600 hover:bg-[#F1F5F9]"
               >
                 تسجيل الخروج
               </button>
@@ -326,11 +328,13 @@ export default function CoursePlayerPage() {
         </div>
       </header>
 
+      {/* الجسم: محتوى + سايدبار */}
       <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_300px]">
-        <div className="min-h-0 overflow-y-auto p-6">
+        {/* المحتوى النشط - 75% */}
+        <div className="min-h-0 overflow-y-auto p-6 bg-[#F8FAFC]">
           {activeVideo && (
             <div className="max-w-3xl">
-              <div className="aspect-video rounded-xl overflow-hidden border border-navy-border mb-4">
+              <div className="aspect-video rounded-xl overflow-hidden shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] mb-4">
                 {getEmbedUrl(activeVideo) ? (
                   <iframe
                     className="w-full h-full"
@@ -340,27 +344,28 @@ export default function CoursePlayerPage() {
                     allowFullScreen
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-red-400">
+                  <div className="w-full h-full flex items-center justify-center text-red-600 bg-white">
                     رابط الفيديو غير صحيح
                   </div>
                 )}
               </div>
 
               <div className="flex items-center justify-between mb-4">
-                <h1 className="text-xl font-bold">{activeVideo.title}</h1>
+                <h1 className="text-xl font-bold text-[#0F172A]">{activeVideo.title}</h1>
                 <button
                   onClick={toggleComplete}
                   className={`text-sm px-4 py-1.5 rounded-lg border transition ${
                     completedIds.includes(activeVideo.id)
-                      ? 'bg-green-500/10 border-green-500 text-green-400'
-                      : 'border-navy-border text-zinc-400 hover:border-gold hover:text-gold'
+                      ? 'bg-green-50 border-[#16A34A] text-[#16A34A]'
+                      : 'border-[#E2E8F0] text-[#475569] hover:border-[#D97706] hover:text-[#D97706]'
                   }`}
                 >
                   {completedIds.includes(activeVideo.id) ? '✓ تم الإكمال' : 'تحديد كمكتمل'}
                 </button>
               </div>
 
-              <div className="flex gap-2 border-b border-navy-border mb-4">
+              {/* تبويبات المحتوى */}
+              <div className="flex gap-2 border-b border-[#E2E8F0] mb-4">
                 {[
                   { key: 'files', label: 'الملفات والمرفقات' },
                   { key: 'discussion', label: 'نقاش الدرس' },
@@ -371,8 +376,8 @@ export default function CoursePlayerPage() {
                     onClick={() => setContentTab(t.key as typeof contentTab)}
                     className={`px-4 py-2 text-sm border-b-2 transition ${
                       contentTab === t.key
-                        ? 'border-gold text-gold-light font-bold'
-                        : 'border-transparent text-zinc-400'
+                        ? 'border-[#D97706] text-[#D97706] font-bold'
+                        : 'border-transparent text-[#475569]'
                     }`}
                   >
                     {t.label}
@@ -383,7 +388,7 @@ export default function CoursePlayerPage() {
               {contentTab === 'files' && (
                 <div className="space-y-2">
                   {materials.length === 0 ? (
-                    <p className="text-zinc-500 text-sm">مفيش ملفات مرفقة لهذا المديول.</p>
+                    <p className="text-[#475569] text-sm">مفيش ملفات مرفقة لهذا المديول.</p>
                   ) : (
                     materials.map((m) => (
                       <a
@@ -391,10 +396,10 @@ export default function CoursePlayerPage() {
                         href={m.file_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-between bg-navy-card border border-navy-border rounded-lg px-4 py-3 hover:border-gold transition"
+                        className="flex items-center justify-between bg-white border border-[#E2E8F0] rounded-lg px-4 py-3 hover:border-[#D97706] transition"
                       >
-                        <span className="text-sm">📄 {m.title}</span>
-                        <span className="text-xs text-gold">تحميل</span>
+                        <span className="text-sm text-[#0F172A]">📄 {m.title}</span>
+                        <span className="text-xs text-[#D97706] font-medium">تحميل</span>
                       </a>
                     ))
                   )}
@@ -409,28 +414,28 @@ export default function CoursePlayerPage() {
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
                       placeholder="اكتب سؤالك عن الدرس..."
-                      className="flex-1 bg-navy-card border border-navy-border rounded-lg px-3 py-2 text-sm"
+                      className="flex-1 bg-white border border-[#E2E8F0] rounded-lg px-3 py-2 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#D97706]"
                     />
                     <button
                       type="submit"
-                      className="bg-gold text-background font-bold px-4 py-2 rounded-lg text-sm hover:bg-gold-light transition"
+                      className="bg-[#D97706] text-white font-bold px-4 py-2 rounded-lg text-sm hover:bg-[#B45309] transition"
                     >
                       إرسال
                     </button>
                   </form>
                   <div className="space-y-3">
                     {comments.length === 0 ? (
-                      <p className="text-zinc-500 text-sm">مفيش أسئلة لسه، ابدأ النقاش.</p>
+                      <p className="text-[#475569] text-sm">مفيش أسئلة لسه، ابدأ النقاش.</p>
                     ) : (
                       comments.map((c) => (
                         <div
                           key={c.id}
-                          className="bg-navy-card border border-navy-border rounded-lg px-4 py-3"
+                          className="bg-white border border-[#E2E8F0] rounded-lg px-4 py-3"
                         >
-                          <p className="text-xs text-gold-light font-bold mb-1">
+                          <p className="text-xs text-[#D97706] font-bold mb-1">
                             {c.author_name}
                           </p>
-                          <p className="text-sm text-zinc-300">{c.text}</p>
+                          <p className="text-sm text-[#334155]">{c.text}</p>
                         </div>
                       ))
                     )}
@@ -439,8 +444,8 @@ export default function CoursePlayerPage() {
               )}
 
               {contentTab === 'ai' && (
-                <div className="bg-navy-card border border-navy-border rounded-lg px-6 py-8 text-center">
-                  <p className="text-zinc-400 text-sm">
+                <div className="bg-white border border-[#E2E8F0] rounded-lg px-6 py-8 text-center">
+                  <p className="text-[#475569] text-sm">
                     ✨ ميزة الملخص الذكي هتتفعل قريبًا في مرحلة الذكاء الاصطناعي بالمنصة.
                   </p>
                 </div>
@@ -451,13 +456,13 @@ export default function CoursePlayerPage() {
           {activeExam && (
             <div className="max-w-lg mx-auto text-center py-16">
               <div className="text-4xl mb-4">📝</div>
-              <h2 className="text-xl font-bold mb-2">{activeExam.exam.title}</h2>
-              <p className="text-zinc-400 text-sm mb-6">
+              <h2 className="text-xl font-bold mb-2 text-[#0F172A]">{activeExam.exam.title}</h2>
+              <p className="text-[#475569] text-sm mb-6">
                 اضغط ابدأ عشان تدخل واجهة الاختبار الكاملة، بعداد وقت ونتيجة فورية.
               </p>
               <Link
                 href={`/dashboard/student/exam/${activeExam.exam.id}`}
-                className="inline-block bg-gold text-background font-bold px-8 py-3 rounded-lg hover:bg-gold-light transition"
+                className="inline-block bg-[#D97706] text-white font-bold px-8 py-3 rounded-lg hover:bg-[#B45309] transition"
               >
                 ابدأ الاختبار
               </Link>
@@ -465,11 +470,12 @@ export default function CoursePlayerPage() {
           )}
 
           {!activeVideo && !activeExam && (
-            <p className="text-zinc-500 text-center py-16">اختر درس من القائمة للبدء</p>
+            <p className="text-[#475569] text-center py-16">اختر درس من القائمة للبدء</p>
           )}
         </div>
 
-        <aside className="border-r-0 md:border-r border-t md:border-t-0 border-navy-border overflow-y-auto p-4 bg-navy-card/40">
+        {/* السايدبار - 25% */}
+        <aside className="border-r-0 md:border-r border-t md:border-t-0 border-[#E2E8F0] overflow-y-auto p-4 bg-white">
           {modules.map((m) => {
             const videos = videosByModule[m.id] ?? []
             const exam = examByModule[m.id]
@@ -480,51 +486,55 @@ export default function CoursePlayerPage() {
               <div key={m.id} className="mb-3">
                 <button
                   onClick={() => setOpenModules({ ...openModules, [m.id]: !isOpen })}
-                  className="w-full flex items-center justify-between bg-navy-card border border-navy-border rounded-lg px-3 py-2.5 text-sm"
+                  className="w-full flex items-center justify-between bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg px-3 py-2.5 text-sm"
                 >
-                  <span className="font-bold">{m.title}</span>
-                  <span className="text-xs text-zinc-500 flex items-center gap-2">
+                  <span className="font-bold text-[#0F172A]">{m.title}</span>
+                  <span className="text-xs text-[#16A34A] font-medium flex items-center gap-2">
                     {doneInModule}/{videos.length}
-                    <span>{isOpen ? '▾' : '◂'}</span>
+                    <span className="text-[#475569]">{isOpen ? '▾' : '◂'}</span>
                   </span>
                 </button>
 
                 {isOpen && (
                   <div className="mt-1 space-y-1">
-                    {videos.map((v) => (
-                      <button
-                        key={v.id}
-                        onClick={() => selectVideo(v)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-right transition ${
-                          activeVideo?.id === v.id
-                            ? 'bg-gold/15 text-gold-light font-bold'
-                            : 'text-zinc-400 hover:bg-navy-border/40'
-                        }`}
-                      >
-                        <span
-                          className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                            completedIds.includes(v.id)
-                              ? 'bg-green-500 border-green-500 text-background'
-                              : 'border-zinc-600'
+                    {videos.map((v) => {
+                      const isActive = activeVideo?.id === v.id
+                      const isDone = completedIds.includes(v.id)
+                      return (
+                        <button
+                          key={v.id}
+                          onClick={() => selectVideo(v)}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-right transition ${
+                            isActive
+                              ? 'bg-[#FEF3C7] text-[#D97706] font-bold'
+                              : 'text-[#475569] hover:bg-[#F1F5F9]'
                           }`}
                         >
-                          {completedIds.includes(v.id) && '✓'}
-                        </span>
-                        <span>▶</span>
-                        <span className="truncate">{v.title}</span>
-                      </button>
-                    ))}
+                          <span
+                            className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                              isDone
+                                ? 'bg-[#16A34A] border-[#16A34A] text-white'
+                                : 'border-[#CBD5E1]'
+                            }`}
+                          >
+                            {isDone && '✓'}
+                          </span>
+                          <span className={isActive ? 'text-[#D97706]' : 'text-[#94A3B8]'}>▶</span>
+                          <span className="truncate">{v.title}</span>
+                        </button>
+                      )
+                    })}
 
                     {exam && (
                       <button
                         onClick={() => selectExam(m.id, exam)}
                         className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-right transition ${
                           activeExam?.exam.id === exam.id
-                            ? 'bg-gold/15 text-gold-light font-bold'
-                            : 'text-zinc-400 hover:bg-navy-border/40'
+                            ? 'bg-[#FEF3C7] text-[#D97706] font-bold'
+                            : 'text-[#475569] hover:bg-[#F1F5F9]'
                         }`}
                       >
-                        <span className="w-4 h-4 rounded-full border border-zinc-600 shrink-0" />
+                        <span className="w-4 h-4 rounded-full border border-[#CBD5E1] shrink-0" />
                         <span>📝</span>
                         <span className="truncate">{exam.title}</span>
                       </button>
