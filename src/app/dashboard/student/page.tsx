@@ -58,7 +58,15 @@ export default function StudentDashboard() {
       <DashboardHeader title="لوحة تحكم الطالب" subtitle="Student" />
 
       <main className="flex-1 px-6 sm:px-12 py-10 max-w-3xl mx-auto w-full">
-        <h2 className="text-2xl font-bold mb-6">الامتحانات المتاحة</h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">الامتحانات المتاحة</h2>
+          <Link
+            href="/dashboard/student/courses"
+            className="text-sm border border-gold text-gold px-4 py-2 rounded-lg hover:bg-gold hover:text-background transition"
+          >
+            الكورسات
+          </Link>
+        </div>
 
         {loading ? (
           <p className="text-zinc-500">جاري التحميل...</p>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import DashboardHeader from '@/components/DashboardHeader'
 
@@ -19,14 +20,26 @@ type Exam = {
   duration_minutes: number
   is_published: boolean
 }
+type Course = {
+  id: string
+  title: string
+  description: string | null
+  subject_id: string
+}
 
 export default function TeacherDashboard() {
   const supabase = createClient()
-  const [tab, setTab] = useState<'questions' | 'exams'>('questions')
+  const [tab, setTab] = useState<'questions' | 'exams' | 'courses'>('questions')
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [exams, setExams] = useState<Exam[]>([])
   const [selectedSubject, setSelectedSubject] = useState('')
+
+  const [courses, setCourses] = useState<Course[]>([])
+  const [courseTitle, setCourseTitle] = useState('')
+  const [courseDesc, setCourseDesc] = useState('')
+  const [courseSubject, setCourseSubject] = useState('')
+  const [pendingCount, setPendingCount] = useState<Record<string, number>>({})
 
   const [qText, setQText] = useState('')
   const [choices, setChoices] = useState(['', '', '', ''])
@@ -43,6 +56,7 @@ export default function TeacherDashboard() {
     if (subs && subs.length && !selectedSubject) {
       setSelectedSubject(subs[0].id)
       setExamSubject(subs[0].id)
+      setCourseSubject(subs[0].id)
     }
 
     const { data: qs } = await supabase
@@ -59,6 +73,49 @@ export default function TeacherDashboard() {
       .select('id, title, subject_id, duration_minutes, is_published')
       .eq('teacher_id', user?.id)
     setExams(ex ?? [])
+
+    const { data: crs } = await supabase
+      .from('courses')
+      .select('id, title, description, subject_id')
+      .eq('teacher_id', user?.id)
+    setCourses(crs ?? [])
+
+    if (crs && crs.length > 0) {
+      const { data: pending } = await supabase
+        .from('course_subscriptions')
+        .select('course_id')
+        .in(
+          'course_id',
+          crs.map((c) => c.id)
+        )
+        .eq('status', 'pending')
+
+      const counts: Record<string, number> = {}
+      ;(pending ?? []).forEach((p) => {
+        counts[p.course_id] = (counts[p.course_id] ?? 0) + 1
+      })
+      setPendingCount(counts)
+    }
+  }
+
+  async function createCourse(e: React.FormEvent) {
+    e.preventDefault()
+    if (!courseTitle.trim() || !courseSubject) return
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    await supabase.from('courses').insert({
+      title: courseTitle.trim(),
+      description: courseDesc.trim() || null,
+      subject_id: courseSubject,
+      teacher_id: user?.id,
+    })
+
+    setCourseTitle('')
+    setCourseDesc('')
+    loadAll()
   }
 
   useEffect(() => {
@@ -154,6 +211,16 @@ export default function TeacherDashboard() {
             }`}
           >
             الامتحانات
+          </button>
+          <button
+            onClick={() => setTab('courses')}
+            className={`px-5 py-2 rounded-lg text-sm border transition ${
+              tab === 'courses'
+                ? 'bg-gold text-background border-gold font-bold'
+                : 'border-navy-border text-zinc-400'
+            }`}
+          >
+            الكورسات
           </button>
         </div>
 
@@ -364,6 +431,83 @@ export default function TeacherDashboard() {
                   >
                     {ex.is_published ? 'إلغاء النشر' : 'نشر'}
                   </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {tab === 'courses' && (
+          <div>
+            <h2 className="text-xl font-bold mb-4">إنشاء كورس جديد</h2>
+            <form
+              onSubmit={createCourse}
+              className="bg-navy-card border border-navy-border rounded-xl p-6 space-y-4 mb-8"
+            >
+              <div>
+                <label className="block text-sm mb-1 text-zinc-300">اسم الكورس</label>
+                <input
+                  type="text"
+                  value={courseTitle}
+                  onChange={(e) => setCourseTitle(e.target.value)}
+                  className="w-full bg-background border border-navy-border rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1 text-zinc-300">وصف مختصر</label>
+                <textarea
+                  value={courseDesc}
+                  onChange={(e) => setCourseDesc(e.target.value)}
+                  rows={2}
+                  className="w-full bg-background border border-navy-border rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1 text-zinc-300">المادة</label>
+                <select
+                  value={courseSubject}
+                  onChange={(e) => setCourseSubject(e.target.value)}
+                  className="w-full bg-background border border-navy-border rounded-lg px-3 py-2"
+                >
+                  {subjects.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="submit"
+                className="bg-gold text-background font-bold px-6 py-2 rounded-lg hover:bg-gold-light transition"
+              >
+                إنشاء الكورس
+              </button>
+            </form>
+
+            <h3 className="text-lg font-bold mb-3">كورساتي</h3>
+            <ul className="space-y-2">
+              {courses.map((c) => (
+                <li
+                  key={c.id}
+                  className="flex justify-between items-center bg-navy-card border border-navy-border rounded-lg px-4 py-3"
+                >
+                  <div>
+                    <p className="font-medium">{c.title}</p>
+                    <p className="text-xs text-zinc-500">
+                      {subjects.find((s) => s.id === c.subject_id)?.name}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/dashboard/teacher/course/${c.id}`}
+                    className="text-sm bg-gold text-background font-bold px-4 py-1.5 rounded-lg hover:bg-gold-light transition relative"
+                  >
+                    إدارة الكورس
+                    {pendingCount[c.id] > 0 && (
+                      <span className="absolute -top-2 -left-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {pendingCount[c.id]}
+                      </span>
+                    )}
+                  </Link>
                 </li>
               ))}
             </ul>
