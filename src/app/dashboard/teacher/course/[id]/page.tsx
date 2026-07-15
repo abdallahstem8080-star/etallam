@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import DashboardHeader from '@/components/DashboardHeader'
 
-type Video = { id: string; title: string; youtube_url: string }
-type Material = { id: string; title: string; file_url: string }
+type ModuleRow = { id: string; title: string; order_index: number }
 type Request = {
   id: string
   student_id: string
@@ -14,41 +14,22 @@ type Request = {
   student_name?: string
 }
 
-function extractYoutubeId(url: string) {
-  const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/
-  )
-  return match ? match[1] : null
-}
-
 export default function ManageCoursePage() {
   const { id } = useParams<{ id: string }>()
   const supabase = createClient()
 
-  const [tab, setTab] = useState<'videos' | 'materials' | 'requests'>('videos')
-  const [videos, setVideos] = useState<Video[]>([])
-  const [materials, setMaterials] = useState<Material[]>([])
+  const [tab, setTab] = useState<'modules' | 'requests'>('modules')
+  const [modules, setModules] = useState<ModuleRow[]>([])
   const [requests, setRequests] = useState<Request[]>([])
-
-  const [videoTitle, setVideoTitle] = useState('')
-  const [videoUrl, setVideoUrl] = useState('')
-  const [materialTitle, setMaterialTitle] = useState('')
-  const [file, setFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
+  const [newModuleTitle, setNewModuleTitle] = useState('')
 
   async function loadAll() {
-    const { data: vids } = await supabase
-      .from('course_videos')
-      .select('id, title, youtube_url')
+    const { data: mods } = await supabase
+      .from('modules')
+      .select('id, title, order_index')
       .eq('course_id', id)
       .order('order_index')
-    setVideos(vids ?? [])
-
-    const { data: mats } = await supabase
-      .from('course_materials')
-      .select('id, title, file_url')
-      .eq('course_id', id)
-    setMaterials(mats ?? [])
+    setModules(mods ?? [])
 
     const { data: reqs } = await supabase
       .from('course_subscriptions')
@@ -59,15 +40,13 @@ export default function ManageCoursePage() {
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, name')
-        .in(
-          'id',
-          reqs.map((r) => r.student_id)
-        )
-      const withNames = reqs.map((r) => ({
-        ...r,
-        student_name: profiles?.find((p) => p.id === r.student_id)?.name ?? 'طالب',
-      }))
-      setRequests(withNames)
+        .in('id', reqs.map((r) => r.student_id))
+      setRequests(
+        reqs.map((r) => ({
+          ...r,
+          student_name: profiles?.find((p) => p.id === r.student_id)?.name ?? 'طالب',
+        }))
+      )
     } else {
       setRequests([])
     }
@@ -78,58 +57,21 @@ export default function ManageCoursePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
-  async function addVideo(e: React.FormEvent) {
+  async function addModule(e: React.FormEvent) {
     e.preventDefault()
-    if (!videoTitle.trim() || !videoUrl.trim()) return
-    await supabase.from('course_videos').insert({
+    if (!newModuleTitle.trim()) return
+    await supabase.from('modules').insert({
       course_id: id,
-      title: videoTitle.trim(),
-      youtube_url: videoUrl.trim(),
+      title: newModuleTitle.trim(),
+      order_index: modules.length,
     })
-    setVideoTitle('')
-    setVideoUrl('')
+    setNewModuleTitle('')
     loadAll()
   }
 
-  async function deleteVideo(vid: string) {
-    await supabase.from('course_videos').delete().eq('id', vid)
-    loadAll()
-  }
-
-  async function uploadMaterial(e: React.FormEvent) {
-    e.preventDefault()
-    if (!file || !materialTitle.trim()) return
-    setUploading(true)
-
-    const filePath = `${id}/${Date.now()}-${file.name}`
-    const { error: uploadError } = await supabase.storage
-      .from('course-materials')
-      .upload(filePath, file)
-
-    if (uploadError) {
-      alert('حدث خطأ أثناء رفع الملف: ' + uploadError.message)
-      setUploading(false)
-      return
-    }
-
-    const { data: publicUrl } = supabase.storage
-      .from('course-materials')
-      .getPublicUrl(filePath)
-
-    await supabase.from('course_materials').insert({
-      course_id: id,
-      title: materialTitle.trim(),
-      file_url: publicUrl.publicUrl,
-    })
-
-    setMaterialTitle('')
-    setFile(null)
-    setUploading(false)
-    loadAll()
-  }
-
-  async function deleteMaterial(mid: string) {
-    await supabase.from('course_materials').delete().eq('id', mid)
+  async function deleteModule(mid: string) {
+    if (!confirm('حذف المديول ده؟ هيتحذف معاه كل الفيديوهات والملفات والكويز بتاعه.')) return
+    await supabase.from('modules').delete().eq('id', mid)
     loadAll()
   }
 
@@ -147,133 +89,81 @@ export default function ManageCoursePage() {
 
       <main className="flex-1 px-6 sm:px-12 py-10 max-w-3xl mx-auto w-full">
         <div className="flex gap-2 mb-8">
-          {[
-            { key: 'videos', label: 'الفيديوهات' },
-            { key: 'materials', label: 'الملفات' },
-            { key: 'requests', label: 'طلبات الاشتراك' },
-          ].map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key as typeof tab)}
-              className={`px-5 py-2 rounded-lg text-sm border transition ${
-                tab === t.key
-                  ? 'bg-gold text-background border-gold font-bold'
-                  : 'border-navy-border text-zinc-400'
-              }`}
-            >
-              {t.label}
-              {t.key === 'requests' &&
-                requests.filter((r) => r.status === 'pending').length > 0 && (
-                  <span className="mr-2 bg-red-500 text-white text-xs rounded-full px-1.5">
-                    {requests.filter((r) => r.status === 'pending').length}
-                  </span>
-                )}
-            </button>
-          ))}
+          <button
+            onClick={() => setTab('modules')}
+            className={`px-5 py-2 rounded-lg text-sm border transition ${
+              tab === 'modules'
+                ? 'bg-gold text-background border-gold font-bold'
+                : 'border-navy-border text-zinc-400'
+            }`}
+          >
+            المديولات
+          </button>
+          <button
+            onClick={() => setTab('requests')}
+            className={`px-5 py-2 rounded-lg text-sm border transition relative ${
+              tab === 'requests'
+                ? 'bg-gold text-background border-gold font-bold'
+                : 'border-navy-border text-zinc-400'
+            }`}
+          >
+            طلبات الاشتراك
+            {requests.filter((r) => r.status === 'pending').length > 0 && (
+              <span className="mr-2 bg-red-500 text-white text-xs rounded-full px-1.5">
+                {requests.filter((r) => r.status === 'pending').length}
+              </span>
+            )}
+          </button>
         </div>
 
-        {tab === 'videos' && (
+        {tab === 'modules' && (
           <div>
-            <form
-              onSubmit={addVideo}
-              className="bg-navy-card border border-navy-border rounded-xl p-6 space-y-4 mb-8"
-            >
-              <div>
-                <label className="block text-sm mb-1 text-zinc-300">عنوان الفيديو</label>
-                <input
-                  type="text"
-                  value={videoTitle}
-                  onChange={(e) => setVideoTitle(e.target.value)}
-                  className="w-full bg-background border border-navy-border rounded-lg px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-1 text-zinc-300">
-                  رابط يوتيوب (Unlisted أو عام)
-                </label>
-                <input
-                  type="text"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://youtube.com/watch?v=..."
-                  className="w-full bg-background border border-navy-border rounded-lg px-3 py-2"
-                />
-              </div>
+            <form onSubmit={addModule} className="flex gap-3 mb-8">
+              <input
+                type="text"
+                placeholder="اسم المديول الجديد (مثال: المديول الأول)"
+                value={newModuleTitle}
+                onChange={(e) => setNewModuleTitle(e.target.value)}
+                className="flex-1 bg-navy-card border border-navy-border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gold"
+              />
               <button
                 type="submit"
                 className="bg-gold text-background font-bold px-6 py-2 rounded-lg hover:bg-gold-light transition"
               >
-                إضافة الفيديو
+                إضافة مديول
               </button>
             </form>
 
-            <ul className="space-y-2">
-              {videos.map((v) => (
-                <li
-                  key={v.id}
-                  className="flex justify-between items-center bg-navy-card border border-navy-border rounded-lg px-4 py-3"
-                >
-                  <span>{v.title}</span>
-                  <button
-                    onClick={() => deleteVideo(v.id)}
-                    className="text-red-400 hover:text-red-300 text-sm"
+            {modules.length === 0 ? (
+              <p className="text-zinc-500">مفيش مديولات لسه، ضيف أول مديول من فوق.</p>
+            ) : (
+              <ul className="space-y-2">
+                {modules.map((m, i) => (
+                  <li
+                    key={m.id}
+                    className="flex justify-between items-center bg-navy-card border border-navy-border rounded-lg px-4 py-3"
                   >
-                    حذف
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {tab === 'materials' && (
-          <div>
-            <form
-              onSubmit={uploadMaterial}
-              className="bg-navy-card border border-navy-border rounded-xl p-6 space-y-4 mb-8"
-            >
-              <div>
-                <label className="block text-sm mb-1 text-zinc-300">عنوان الملف</label>
-                <input
-                  type="text"
-                  value={materialTitle}
-                  onChange={(e) => setMaterialTitle(e.target.value)}
-                  className="w-full bg-background border border-navy-border rounded-lg px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-1 text-zinc-300">اختر الملف</label>
-                <input
-                  type="file"
-                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  className="w-full text-sm text-zinc-300"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={uploading}
-                className="bg-gold text-background font-bold px-6 py-2 rounded-lg hover:bg-gold-light transition disabled:opacity-50"
-              >
-                {uploading ? 'جاري الرفع...' : 'رفع الملف'}
-              </button>
-            </form>
-
-            <ul className="space-y-2">
-              {materials.map((m) => (
-                <li
-                  key={m.id}
-                  className="flex justify-between items-center bg-navy-card border border-navy-border rounded-lg px-4 py-3"
-                >
-                  <span>{m.title}</span>
-                  <button
-                    onClick={() => deleteMaterial(m.id)}
-                    className="text-red-400 hover:text-red-300 text-sm"
-                  >
-                    حذف
-                  </button>
-                </li>
-              ))}
-            </ul>
+                    <span className="font-medium">
+                      {i + 1}. {m.title}
+                    </span>
+                    <div className="flex gap-3 items-center">
+                      <Link
+                        href={`/dashboard/teacher/course/${id}/module/${m.id}`}
+                        className="text-sm bg-gold text-background font-bold px-4 py-1.5 rounded-lg hover:bg-gold-light transition"
+                      >
+                        إدارة المديول
+                      </Link>
+                      <button
+                        onClick={() => deleteModule(m.id)}
+                        className="text-red-400 hover:text-red-300 text-sm"
+                      >
+                        حذف
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
@@ -291,12 +181,8 @@ export default function ManageCoursePage() {
                   <p className="font-medium">{r.student_name}</p>
                   <p className="text-xs text-zinc-500">
                     {r.status === 'pending' && 'معلّق'}
-                    {r.status === 'approved' && (
-                      <span className="text-green-400">مقبول</span>
-                    )}
-                    {r.status === 'rejected' && (
-                      <span className="text-red-400">مرفوض</span>
-                    )}
+                    {r.status === 'approved' && <span className="text-green-400">مقبول</span>}
+                    {r.status === 'rejected' && <span className="text-red-400">مرفوض</span>}
                   </p>
                 </div>
                 {r.status === 'pending' && (
