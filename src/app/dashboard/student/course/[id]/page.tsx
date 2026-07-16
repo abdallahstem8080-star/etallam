@@ -334,7 +334,10 @@ export default function CoursePlayerPage() {
         <div className="min-h-0 overflow-y-auto p-6 bg-[#F8FAFC]">
           {activeVideo && (
             <div className="max-w-3xl">
-              <div className="aspect-video rounded-xl overflow-hidden shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] mb-4">
+              <div
+                onContextMenu={(e) => e.preventDefault()}
+                className="aspect-video rounded-xl overflow-hidden shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] mb-4"
+              >
                 {getEmbedUrl(activeVideo) ? (
                   <iframe
                     className="w-full h-full"

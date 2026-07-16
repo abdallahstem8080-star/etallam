@@ -38,5 +38,25 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // حماية حسب نوع الحساب: كل حساب يقدر يدخل صفحاته بس
+  if (user && isProtected) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const role = profile?.role
+    const roleSection = path.split('/')[2] // dashboard/[role]/...
+
+    const validRoles = ['admin', 'teacher', 'student', 'parent']
+
+    if (role && validRoles.includes(roleSection) && roleSection !== role) {
+      const url = request.nextUrl.clone()
+      url.pathname = `/dashboard/${role}`
+      return NextResponse.redirect(url)
+    }
+  }
+
   return supabaseResponse
 }

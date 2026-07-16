@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import DashboardHeader from '@/components/DashboardHeader'
 
@@ -81,8 +82,10 @@ export default function CoursesPage() {
             {courses.map((c) => {
               const status = getStatus(c.id)
               return (
-                <li
+                <motion.li
                   key={c.id}
+                  whileHover={{ scale: 1.015, boxShadow: '0 0 24px rgba(212,175,55,0.15)' }}
+                  transition={{ duration: 0.2 }}
                   className="flex items-center justify-between bg-navy-card border border-navy-border rounded-xl px-5 py-4"
                 >
                   <div>
@@ -114,7 +117,7 @@ export default function CoursesPage() {
                       اشتراك
                     </button>
                   )}
-                </li>
+                </motion.li>
               )
             })}
           </ul>

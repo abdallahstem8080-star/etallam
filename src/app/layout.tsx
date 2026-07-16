@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import PageTransition from "@/components/PageTransition";
 
 export const metadata: Metadata = {
   title: "اتعلم",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <PageTransition>{children}</PageTransition>
+      </body>
     </html>
   );
 }
