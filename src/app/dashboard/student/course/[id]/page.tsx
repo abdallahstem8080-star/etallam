@@ -18,6 +18,8 @@ type Video = {
 }
 type Material = { id: string; title: string; file_url: string }
 type ExamRow = { id: string; title: string }
+type Assignment = { id: string; title: string; description: string | null; due_date: string | null }
+type MySubmission = { file_url: string; grade: number | null; feedback: string | null }
 type Comment = { id: string; text: string; author_id: string; author_name?: string; created_at: string }
 
 function extractYoutubeId(url: string) {
@@ -47,10 +49,16 @@ export default function CoursePlayerPage() {
   const [modules, setModules] = useState<ModuleRow[]>([])
   const [videosByModule, setVideosByModule] = useState<Record<string, Video[]>>({})
   const [examByModule, setExamByModule] = useState<Record<string, ExamRow | null>>({})
+  const [assignmentsByModule, setAssignmentsByModule] = useState<Record<string, Assignment[]>>({})
   const [openModules, setOpenModules] = useState<Record<string, boolean>>({})
 
   const [activeVideo, setActiveVideo] = useState<Video | null>(null)
   const [activeExam, setActiveExam] = useState<{ moduleId: string; exam: ExamRow } | null>(null)
+  const [activeAssignment, setActiveAssignment] = useState<Assignment | null>(null)
+  const [mySubmission, setMySubmission] = useState<MySubmission | null>(null)
+  const [assignFile, setAssignFile] = useState<File | null>(null)
+  const [assignUploading, setAssignUploading] = useState(false)
+  const [assignError, setAssignError] = useState('')
   const [contentTab, setContentTab] = useState<'files' | 'discussion' | 'ai'>('files')
 
   const [materials, setMaterials] = useState<Material[]>([])
@@ -106,6 +114,7 @@ export default function CoursePlayerPage() {
 
     const videosMap: Record<string, Video[]> = {}
     const examsMap: Record<string, ExamRow | null> = {}
+    const assignmentsMap: Record<string, Assignment[]> = {}
 
     for (const m of mods ?? []) {
       const { data: vids } = await supabase
@@ -122,9 +131,16 @@ export default function CoursePlayerPage() {
         .eq('is_published', true)
         .maybeSingle()
       examsMap[m.id] = ex ?? null
+
+      const { data: assigns } = await supabase
+        .from('assignments')
+        .select('id, title, description, due_date')
+        .eq('module_id', m.id)
+      assignmentsMap[m.id] = assigns ?? []
     }
     setVideosByModule(videosMap)
     setExamByModule(examsMap)
+    setAssignmentsByModule(assignmentsMap)
 
     if (mods && mods.length > 0) {
       setOpenModules({ [mods[0].id]: true })
@@ -247,11 +263,75 @@ export default function CoursePlayerPage() {
   function selectVideo(v: Video) {
     setActiveVideo(v)
     setActiveExam(null)
+    setActiveAssignment(null)
   }
 
   function selectExam(moduleId: string, exam: ExamRow) {
     setActiveExam({ moduleId, exam })
     setActiveVideo(null)
+    setActiveAssignment(null)
+  }
+
+  async function selectAssignment(a: Assignment) {
+    setActiveAssignment(a)
+    setActiveVideo(null)
+    setActiveExam(null)
+    setAssignError('')
+    setAssignFile(null)
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    const { data: sub } = await supabase
+      .from('assignment_submissions')
+      .select('file_url, grade, feedback')
+      .eq('assignment_id', a.id)
+      .eq('student_id', user?.id)
+      .maybeSingle()
+    setMySubmission(sub ?? null)
+  }
+
+  async function submitAssignment(e: React.FormEvent) {
+    e.preventDefault()
+    setAssignError('')
+    if (!assignFile || !activeAssignment) {
+      setAssignError('لازم تختار ملف فعلي الأول')
+      return
+    }
+    setAssignUploading(true)
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    const filePath = `${activeAssignment.id}/${user?.id}-${Date.now()}-${assignFile.name}`
+    const { error: uploadErr } = await supabase.storage
+      .from('assignments')
+      .upload(filePath, assignFile)
+
+    if (uploadErr) {
+      setAssignError('فشل رفع الملف: ' + uploadErr.message)
+      setAssignUploading(false)
+      return
+    }
+
+    const { data: publicUrl } = supabase.storage.from('assignments').getPublicUrl(filePath)
+
+    const { error: insertErr } = await supabase.from('assignment_submissions').insert({
+      assignment_id: activeAssignment.id,
+      student_id: user?.id,
+      file_url: publicUrl.publicUrl,
+    })
+
+    setAssignUploading(false)
+
+    if (insertErr) {
+      setAssignError('حصل خطأ: ' + insertErr.message)
+      return
+    }
+
+    setMySubmission({ file_url: publicUrl.publicUrl, grade: null, feedback: null })
   }
 
   async function handleLogout() {
@@ -472,7 +552,72 @@ export default function CoursePlayerPage() {
             </div>
           )}
 
-          {!activeVideo && !activeExam && (
+          {activeAssignment && (
+            <div className="max-w-lg mx-auto py-10">
+              <div className="text-3xl mb-3 text-center">📎</div>
+              <h2 className="text-xl font-bold mb-2 text-center text-[#0F172A]">
+                {activeAssignment.title}
+              </h2>
+              {activeAssignment.description && (
+                <p className="text-[#475569] text-sm text-center mb-3">
+                  {activeAssignment.description}
+                </p>
+              )}
+              {activeAssignment.due_date && (
+                <p className="text-xs text-[#94A3B8] text-center mb-6">
+                  آخر موعد للتسليم: {new Date(activeAssignment.due_date).toLocaleString('ar-EG')}
+                </p>
+              )}
+
+              {mySubmission ? (
+                <div className="bg-white border border-[#E2E8F0] rounded-lg p-5 text-center">
+                  <p className="text-[#16A34A] font-bold mb-2">✓ تم تسليم الواجب</p>
+                  <a
+                    href={mySubmission.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#D97706] text-sm underline"
+                  >
+                    عرض الملف اللي بعتّه
+                  </a>
+                  {mySubmission.grade !== null && (
+                    <div className="mt-4 pt-4 border-t border-[#E2E8F0]">
+                      <p className="text-lg font-bold text-[#0F172A]">
+                        الدرجة: {mySubmission.grade}
+                      </p>
+                      {mySubmission.feedback && (
+                        <p className="text-sm text-[#475569] mt-1">{mySubmission.feedback}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <form
+                  onSubmit={submitAssignment}
+                  className="bg-white border border-[#E2E8F0] rounded-lg p-5 space-y-4"
+                >
+                  <input
+                    type="file"
+                    onChange={(e) => setAssignFile(e.target.files?.[0] ?? null)}
+                    className="w-full text-sm border border-[#E2E8F0] rounded-lg px-3 py-2"
+                  />
+                  {assignFile && (
+                    <p className="text-xs text-[#16A34A]">تم اختيار: {assignFile.name}</p>
+                  )}
+                  {assignError && <p className="text-red-600 text-sm">{assignError}</p>}
+                  <button
+                    type="submit"
+                    disabled={assignUploading}
+                    className="w-full bg-[#D97706] text-white font-bold py-2 rounded-lg hover:bg-[#B45309] transition disabled:opacity-50"
+                  >
+                    {assignUploading ? 'جاري الإرسال...' : 'إرسال الواجب'}
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+
+          {!activeVideo && !activeExam && !activeAssignment && (
             <p className="text-[#475569] text-center py-16">اختر درس من القائمة للبدء</p>
           )}
         </div>
@@ -542,6 +687,22 @@ export default function CoursePlayerPage() {
                         <span className="truncate">{exam.title}</span>
                       </button>
                     )}
+
+                    {(assignmentsByModule[m.id] ?? []).map((a) => (
+                      <button
+                        key={a.id}
+                        onClick={() => selectAssignment(a)}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-right transition ${
+                          activeAssignment?.id === a.id
+                            ? 'bg-[#FEF3C7] text-[#D97706] font-bold'
+                            : 'text-[#475569] hover:bg-[#F1F5F9]'
+                        }`}
+                      >
+                        <span className="w-4 h-4 rounded-full border border-[#CBD5E1] shrink-0" />
+                        <span>📎</span>
+                        <span className="truncate">{a.title}</span>
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>

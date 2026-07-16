@@ -9,12 +9,22 @@ type Video = { id: string; title: string; youtube_url: string; video_source: str
 type Material = { id: string; title: string; file_url: string }
 type ExamRow = { id: string; title: string; is_published: boolean }
 type Question = { id: string; text: string; subject_id: string }
+type Assignment = { id: string; title: string; description: string | null; due_date: string | null }
+type Submission = {
+  id: string
+  student_id: string
+  student_name?: string
+  file_url: string
+  submitted_at: string
+  grade: number | null
+  feedback: string | null
+}
 
 export default function ManageModulePage() {
   const { id: courseId, moduleId } = useParams<{ id: string; moduleId: string }>()
   const supabase = createClient()
 
-  const [tab, setTab] = useState<'videos' | 'materials' | 'quiz'>('videos')
+  const [tab, setTab] = useState<'videos' | 'materials' | 'quiz' | 'assignments'>('videos')
 
   const [videos, setVideos] = useState<Video[]>([])
   const [videoTitle, setVideoTitle] = useState('')
@@ -33,6 +43,13 @@ export default function ManageModulePage() {
   const [subjectId, setSubjectId] = useState('')
   const [bankQuestions, setBankQuestions] = useState<Question[]>([])
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([])
+
+  const [assignments, setAssignments] = useState<Assignment[]>([])
+  const [assignTitle, setAssignTitle] = useState('')
+  const [assignDesc, setAssignDesc] = useState('')
+  const [assignDue, setAssignDue] = useState('')
+  const [activeAssignment, setActiveAssignment] = useState<string | null>(null)
+  const [submissions, setSubmissions] = useState<Submission[]>([])
 
   async function loadAll() {
     const { data: vids } = await supabase
@@ -77,6 +94,12 @@ export default function ManageModulePage() {
         .eq('exam_id', existingExam.id)
       setSelectedQuestionIds((examQs ?? []).map((q) => q.question_id))
     }
+
+    const { data: assigns } = await supabase
+      .from('assignments')
+      .select('id, title, description, due_date')
+      .eq('module_id', moduleId)
+    setAssignments(assigns ?? [])
   }
 
   useEffect(() => {
@@ -208,6 +231,63 @@ export default function ManageModulePage() {
     loadAll()
   }
 
+  async function createAssignment(e: React.FormEvent) {
+    e.preventDefault()
+    if (!assignTitle.trim()) return
+    await supabase.from('assignments').insert({
+      module_id: moduleId,
+      title: assignTitle.trim(),
+      description: assignDesc.trim() || null,
+      due_date: assignDue || null,
+    })
+    setAssignTitle('')
+    setAssignDesc('')
+    setAssignDue('')
+    loadAll()
+  }
+
+  async function deleteAssignment(aid: string) {
+    if (!confirm('حذف الواجب ده؟')) return
+    await supabase.from('assignments').delete().eq('id', aid)
+    if (activeAssignment === aid) setActiveAssignment(null)
+    loadAll()
+  }
+
+  async function openSubmissions(assignmentId: string) {
+    setActiveAssignment(assignmentId)
+    const { data: subs } = await supabase
+      .from('assignment_submissions')
+      .select('id, student_id, file_url, submitted_at, grade, feedback')
+      .eq('assignment_id', assignmentId)
+
+    if (subs && subs.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .in('id', subs.map((s) => s.student_id))
+      setSubmissions(
+        subs.map((s) => ({
+          ...s,
+          student_name: profiles?.find((p) => p.id === s.student_id)?.name ?? 'طالب',
+        }))
+      )
+    } else {
+      setSubmissions([])
+    }
+  }
+
+  async function gradeSubmission(subId: string, grade: string, feedback: string) {
+    await supabase
+      .from('assignment_submissions')
+      .update({
+        grade: grade ? Number(grade) : null,
+        feedback: feedback || null,
+        graded_at: new Date().toISOString(),
+      })
+      .eq('id', subId)
+    if (activeAssignment) openSubmissions(activeAssignment)
+  }
+
   return (
     <div className="min-h-screen flex flex-col flex-1 bg-background text-foreground">
       <DashboardHeader title="إدارة المديول" subtitle="Teacher" />
@@ -218,6 +298,7 @@ export default function ManageModulePage() {
             { key: 'videos', label: 'الفيديوهات' },
             { key: 'materials', label: 'الملفات' },
             { key: 'quiz', label: 'الكويز' },
+            { key: 'assignments', label: 'الواجبات' },
           ].map((t) => (
             <button
               key={t.key}
@@ -482,7 +563,145 @@ export default function ManageModulePage() {
             )}
           </div>
         )}
+
+        {tab === 'assignments' && (
+          <div>
+            <form
+              onSubmit={createAssignment}
+              className="bg-navy-card border border-navy-border rounded-xl p-6 space-y-4 mb-8"
+            >
+              <div>
+                <label className="block text-sm mb-1 text-zinc-700">عنوان الواجب</label>
+                <input
+                  type="text"
+                  value={assignTitle}
+                  onChange={(e) => setAssignTitle(e.target.value)}
+                  className="w-full bg-background border border-navy-border rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1 text-zinc-700">الوصف / المطلوب</label>
+                <textarea
+                  value={assignDesc}
+                  onChange={(e) => setAssignDesc(e.target.value)}
+                  rows={2}
+                  className="w-full bg-background border border-navy-border rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1 text-zinc-700">آخر موعد للتسليم (اختياري)</label>
+                <input
+                  type="datetime-local"
+                  value={assignDue}
+                  onChange={(e) => setAssignDue(e.target.value)}
+                  className="w-full bg-background border border-navy-border rounded-lg px-3 py-2"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-gold text-white font-bold px-6 py-2 rounded-lg hover:bg-gold-light transition"
+              >
+                إنشاء الواجب
+              </button>
+            </form>
+
+            <ul className="space-y-2 mb-8">
+              {assignments.map((a) => (
+                <li
+                  key={a.id}
+                  className="bg-navy-card border border-navy-border rounded-lg px-4 py-3"
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium">{a.title}</p>
+                      {a.due_date && (
+                        <p className="text-xs text-zinc-500">
+                          آخر موعد: {new Date(a.due_date).toLocaleString('ar-EG')}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-3 items-center">
+                      <button
+                        onClick={() => openSubmissions(a.id)}
+                        className="text-sm bg-gold text-white font-bold px-4 py-1.5 rounded-lg hover:bg-gold-light transition"
+                      >
+                        عرض التسليمات
+                      </button>
+                      <button
+                        onClick={() => deleteAssignment(a.id)}
+                        className="text-red-600 hover:text-red-500 text-sm"
+                      >
+                        حذف
+                      </button>
+                    </div>
+                  </div>
+
+                  {activeAssignment === a.id && (
+                    <div className="mt-4 space-y-3 border-t border-navy-border pt-4">
+                      {submissions.length === 0 ? (
+                        <p className="text-zinc-500 text-sm">مفيش تسليمات لسه.</p>
+                      ) : (
+                        submissions.map((s) => (
+                          <SubmissionRow key={s.id} submission={s} onGrade={gradeSubmission} />
+                        ))
+                      )}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </main>
+    </div>
+  )
+}
+
+function SubmissionRow({
+  submission,
+  onGrade,
+}: {
+  submission: Submission
+  onGrade: (id: string, grade: string, feedback: string) => void
+}) {
+  const [grade, setGrade] = useState(submission.grade?.toString() ?? '')
+  const [feedback, setFeedback] = useState(submission.feedback ?? '')
+
+  return (
+    <div className="bg-background border border-navy-border rounded-lg p-3">
+      <div className="flex justify-between items-center mb-2">
+        <p className="font-medium text-sm">{submission.student_name}</p>
+        <a
+          href={submission.file_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-gold text-xs hover:text-gold-light"
+        >
+          تحميل الملف
+        </a>
+      </div>
+      <div className="flex gap-2">
+        <input
+          type="number"
+          placeholder="الدرجة"
+          value={grade}
+          onChange={(e) => setGrade(e.target.value)}
+          className="w-20 bg-navy-card border border-navy-border rounded-lg px-2 py-1 text-sm"
+        />
+        <input
+          type="text"
+          placeholder="ملاحظات (اختياري)"
+          value={feedback}
+          onChange={(e) => setFeedback(e.target.value)}
+          className="flex-1 bg-navy-card border border-navy-border rounded-lg px-2 py-1 text-sm"
+        />
+        <button
+          onClick={() => onGrade(submission.id, grade, feedback)}
+          className="bg-gold text-white text-sm font-bold px-3 py-1 rounded-lg hover:bg-gold-light transition"
+        >
+          حفظ
+        </button>
+      </div>
     </div>
   )
 }
