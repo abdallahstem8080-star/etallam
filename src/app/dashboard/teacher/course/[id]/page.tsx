@@ -94,7 +94,7 @@ export default function ManageCoursePage() {
             className={`px-5 py-2 rounded-lg text-sm border transition ${
               tab === 'modules'
                 ? 'bg-gold text-background border-gold font-bold'
-                : 'border-navy-border text-zinc-400'
+                : 'border-navy-border text-zinc-500'
             }`}
           >
             المديولات
@@ -104,7 +104,7 @@ export default function ManageCoursePage() {
             className={`px-5 py-2 rounded-lg text-sm border transition relative ${
               tab === 'requests'
                 ? 'bg-gold text-background border-gold font-bold'
-                : 'border-navy-border text-zinc-400'
+                : 'border-navy-border text-zinc-500'
             }`}
           >
             طلبات الاشتراك
@@ -155,7 +155,7 @@ export default function ManageCoursePage() {
                       </Link>
                       <button
                         onClick={() => deleteModule(m.id)}
-                        className="text-red-400 hover:text-red-300 text-sm"
+                        className="text-red-600 hover:text-red-300 text-sm"
                       >
                         حذف
                       </button>
@@ -181,8 +181,8 @@ export default function ManageCoursePage() {
                   <p className="font-medium">{r.student_name}</p>
                   <p className="text-xs text-zinc-500">
                     {r.status === 'pending' && 'معلّق'}
-                    {r.status === 'approved' && <span className="text-green-400">مقبول</span>}
-                    {r.status === 'rejected' && <span className="text-red-400">مرفوض</span>}
+                    {r.status === 'approved' && <span className="text-green-600">مقبول</span>}
+                    {r.status === 'rejected' && <span className="text-red-600">مرفوض</span>}
                   </p>
                 </div>
                 {r.status === 'pending' && (
@@ -195,7 +195,7 @@ export default function ManageCoursePage() {
                     </button>
                     <button
                       onClick={() => respondRequest(r.id, 'rejected')}
-                      className="text-sm border border-navy-border text-zinc-400 px-4 py-1.5 rounded-lg hover:border-red-400 hover:text-red-400 transition"
+                      className="text-sm border border-navy-border text-zinc-500 px-4 py-1.5 rounded-lg hover:border-red-500 hover:text-red-600 transition"
                     >
                       رفض
                     </button>

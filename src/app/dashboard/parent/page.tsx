@@ -116,8 +116,8 @@ export default function ParentDashboard() {
             ربط
           </button>
         </form>
-        {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
-        {success && <p className="text-green-400 text-sm mb-4">{success}</p>}
+        {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+        {success && <p className="text-green-600 text-sm mb-4">{success}</p>}
 
         <h2 className="text-xl font-bold mb-4 mt-10">أبنائي</h2>
 
@@ -148,7 +148,7 @@ export default function ParentDashboard() {
                         key={sub.id}
                         className="flex justify-between text-sm border-t border-navy-border pt-2"
                       >
-                        <span className="text-zinc-300">
+                        <span className="text-zinc-700">
                           {exams.find((e) => e.id === sub.exam_id)?.title ?? 'امتحان'}
                         </span>
                         <span className="text-gold-light font-bold">{sub.score}%</span>

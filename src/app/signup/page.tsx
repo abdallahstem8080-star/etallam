@@ -70,11 +70,11 @@ export default function SignupPage() {
 
       <div className="w-full max-w-sm bg-navy-card border border-navy-border rounded-xl shadow-lg p-8">
         <h1 className="text-xl font-bold text-center mb-1">إنشاء حساب جديد</h1>
-        <p className="text-center text-zinc-400 text-sm mb-6">انضم للمنصة الآن</p>
+        <p className="text-center text-zinc-500 text-sm mb-6">انضم للمنصة الآن</p>
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1 text-zinc-300">نوع الحساب</label>
+            <label className="block text-sm font-medium mb-1 text-zinc-700">نوع الحساب</label>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { value: 'student', label: 'طالب' },
@@ -88,7 +88,7 @@ export default function SignupPage() {
                   className={`py-2 rounded-lg text-sm border transition ${
                     role === opt.value
                       ? 'bg-gold text-background border-gold font-bold'
-                      : 'border-navy-border text-zinc-400'
+                      : 'border-navy-border text-zinc-500'
                   }`}
                 >
                   {opt.label}
@@ -98,7 +98,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1 text-zinc-300">الاسم</label>
+            <label className="block text-sm font-medium mb-1 text-zinc-700">الاسم</label>
             <input
               type="text"
               required
@@ -109,7 +109,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1 text-zinc-300">
+            <label className="block text-sm font-medium mb-1 text-zinc-700">
               البريد الإلكتروني
             </label>
             <input
@@ -122,7 +122,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1 text-zinc-300">
+            <label className="block text-sm font-medium mb-1 text-zinc-700">
               رقم الهاتف (اختياري)
             </label>
             <input
@@ -134,7 +134,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1 text-zinc-300">كلمة المرور</label>
+            <label className="block text-sm font-medium mb-1 text-zinc-700">كلمة المرور</label>
             <input
               type="password"
               required
@@ -145,7 +145,7 @@ export default function SignupPage() {
             />
           </div>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p className="text-red-600 text-sm">{error}</p>}
 
           <button
             type="submit"
@@ -156,7 +156,7 @@ export default function SignupPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-zinc-400 mt-4">
+        <p className="text-center text-sm text-zinc-500 mt-4">
           عندك حساب بالفعل؟{' '}
           <Link href="/login" className="text-gold hover:text-gold-light">
             سجل دخول

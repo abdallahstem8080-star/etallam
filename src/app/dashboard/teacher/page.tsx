@@ -197,7 +197,7 @@ export default function TeacherDashboard() {
             className={`px-5 py-2 rounded-lg text-sm border transition ${
               tab === 'questions'
                 ? 'bg-gold text-background border-gold font-bold'
-                : 'border-navy-border text-zinc-400'
+                : 'border-navy-border text-zinc-500'
             }`}
           >
             بنك الأسئلة
@@ -207,7 +207,7 @@ export default function TeacherDashboard() {
             className={`px-5 py-2 rounded-lg text-sm border transition ${
               tab === 'exams'
                 ? 'bg-gold text-background border-gold font-bold'
-                : 'border-navy-border text-zinc-400'
+                : 'border-navy-border text-zinc-500'
             }`}
           >
             الامتحانات
@@ -217,7 +217,7 @@ export default function TeacherDashboard() {
             className={`px-5 py-2 rounded-lg text-sm border transition ${
               tab === 'courses'
                 ? 'bg-gold text-background border-gold font-bold'
-                : 'border-navy-border text-zinc-400'
+                : 'border-navy-border text-zinc-500'
             }`}
           >
             الكورسات
@@ -232,7 +232,7 @@ export default function TeacherDashboard() {
               className="bg-navy-card border border-navy-border rounded-xl p-6 space-y-4 mb-8"
             >
               <div>
-                <label className="block text-sm mb-1 text-zinc-300">المادة</label>
+                <label className="block text-sm mb-1 text-zinc-700">المادة</label>
                 <select
                   value={selectedSubject}
                   onChange={(e) => setSelectedSubject(e.target.value)}
@@ -247,7 +247,7 @@ export default function TeacherDashboard() {
               </div>
 
               <div>
-                <label className="block text-sm mb-1 text-zinc-300">نص السؤال</label>
+                <label className="block text-sm mb-1 text-zinc-700">نص السؤال</label>
                 <textarea
                   value={qText}
                   onChange={(e) => setQText(e.target.value)}
@@ -257,7 +257,7 @@ export default function TeacherDashboard() {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm mb-1 text-zinc-300">
+                <label className="block text-sm mb-1 text-zinc-700">
                   الاختيارات (حدد الإجابة الصح)
                 </label>
                 {choices.map((c, i) => (
@@ -307,7 +307,7 @@ export default function TeacherDashboard() {
                   </div>
                   <button
                     onClick={() => deleteQuestion(q.id)}
-                    className="text-red-400 hover:text-red-300 text-sm"
+                    className="text-red-600 hover:text-red-300 text-sm"
                   >
                     حذف
                   </button>
@@ -325,7 +325,7 @@ export default function TeacherDashboard() {
               className="bg-navy-card border border-navy-border rounded-xl p-6 space-y-4 mb-8"
             >
               <div>
-                <label className="block text-sm mb-1 text-zinc-300">عنوان الامتحان</label>
+                <label className="block text-sm mb-1 text-zinc-700">عنوان الامتحان</label>
                 <input
                   type="text"
                   value={examTitle}
@@ -336,7 +336,7 @@ export default function TeacherDashboard() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm mb-1 text-zinc-300">المادة</label>
+                  <label className="block text-sm mb-1 text-zinc-700">المادة</label>
                   <select
                     value={examSubject}
                     onChange={(e) => {
@@ -353,7 +353,7 @@ export default function TeacherDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm mb-1 text-zinc-300">المدة (دقيقة)</label>
+                  <label className="block text-sm mb-1 text-zinc-700">المدة (دقيقة)</label>
                   <input
                     type="number"
                     value={examDuration}
@@ -364,7 +364,7 @@ export default function TeacherDashboard() {
               </div>
 
               <div>
-                <label className="block text-sm mb-2 text-zinc-300">
+                <label className="block text-sm mb-2 text-zinc-700">
                   اختر الأسئلة من بنك أسئلة المادة دي
                 </label>
                 <div className="space-y-2 max-h-52 overflow-y-auto">
@@ -415,7 +415,7 @@ export default function TeacherDashboard() {
                     <p className="text-xs text-zinc-500">
                       {ex.duration_minutes} دقيقة —{' '}
                       {ex.is_published ? (
-                        <span className="text-green-400">منشور</span>
+                        <span className="text-green-600">منشور</span>
                       ) : (
                         <span className="text-zinc-500">مسودة</span>
                       )}
@@ -425,7 +425,7 @@ export default function TeacherDashboard() {
                     onClick={() => togglePublish(ex)}
                     className={`text-sm px-4 py-1.5 rounded-lg border transition ${
                       ex.is_published
-                        ? 'border-navy-border text-zinc-400'
+                        ? 'border-navy-border text-zinc-500'
                         : 'bg-gold text-background border-gold font-bold'
                     }`}
                   >
@@ -445,7 +445,7 @@ export default function TeacherDashboard() {
               className="bg-navy-card border border-navy-border rounded-xl p-6 space-y-4 mb-8"
             >
               <div>
-                <label className="block text-sm mb-1 text-zinc-300">اسم الكورس</label>
+                <label className="block text-sm mb-1 text-zinc-700">اسم الكورس</label>
                 <input
                   type="text"
                   value={courseTitle}
@@ -454,7 +454,7 @@ export default function TeacherDashboard() {
                 />
               </div>
               <div>
-                <label className="block text-sm mb-1 text-zinc-300">وصف مختصر</label>
+                <label className="block text-sm mb-1 text-zinc-700">وصف مختصر</label>
                 <textarea
                   value={courseDesc}
                   onChange={(e) => setCourseDesc(e.target.value)}
@@ -463,7 +463,7 @@ export default function TeacherDashboard() {
                 />
               </div>
               <div>
-                <label className="block text-sm mb-1 text-zinc-300">المادة</label>
+                <label className="block text-sm mb-1 text-zinc-700">المادة</label>
                 <select
                   value={courseSubject}
                   onChange={(e) => setCourseSubject(e.target.value)}

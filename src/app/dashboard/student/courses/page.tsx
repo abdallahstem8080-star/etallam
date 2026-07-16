@@ -94,7 +94,7 @@ export default function CoursesPage() {
                       {subjects.find((s) => s.id === c.subject_id)?.name}
                     </p>
                     {c.description && (
-                      <p className="text-sm text-zinc-400 mt-1">{c.description}</p>
+                      <p className="text-sm text-zinc-500 mt-1">{c.description}</p>
                     )}
                   </div>
 
@@ -106,9 +106,9 @@ export default function CoursesPage() {
                       ادخل الكورس
                     </Link>
                   ) : status === 'pending' ? (
-                    <span className="text-zinc-400 text-sm">طلبك قيد المراجعة</span>
+                    <span className="text-zinc-500 text-sm">طلبك قيد المراجعة</span>
                   ) : status === 'rejected' ? (
-                    <span className="text-red-400 text-sm">تم رفض الطلب</span>
+                    <span className="text-red-600 text-sm">تم رفض الطلب</span>
                   ) : (
                     <button
                       onClick={() => requestSubscription(c.id)}

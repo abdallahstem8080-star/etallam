@@ -225,7 +225,7 @@ export default function ManageModulePage() {
               className={`px-5 py-2 rounded-lg text-sm border transition ${
                 tab === t.key
                   ? 'bg-gold text-background border-gold font-bold'
-                  : 'border-navy-border text-zinc-400'
+                  : 'border-navy-border text-zinc-500'
               }`}
             >
               {t.label}
@@ -240,7 +240,7 @@ export default function ManageModulePage() {
               className="bg-navy-card border border-navy-border rounded-xl p-6 space-y-4 mb-8"
             >
               <div>
-                <label className="block text-sm mb-1 text-zinc-300">عنوان الفيديو</label>
+                <label className="block text-sm mb-1 text-zinc-700">عنوان الفيديو</label>
                 <input
                   type="text"
                   value={videoTitle}
@@ -250,7 +250,7 @@ export default function ManageModulePage() {
               </div>
 
               <div>
-                <label className="block text-sm mb-2 text-zinc-300">مصدر الفيديو</label>
+                <label className="block text-sm mb-2 text-zinc-700">مصدر الفيديو</label>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -258,7 +258,7 @@ export default function ManageModulePage() {
                     className={`px-4 py-2 rounded-lg text-sm border ${
                       videoSource === 'youtube'
                         ? 'bg-gold text-background border-gold font-bold'
-                        : 'border-navy-border text-zinc-400'
+                        : 'border-navy-border text-zinc-500'
                     }`}
                   >
                     يوتيوب
@@ -269,7 +269,7 @@ export default function ManageModulePage() {
                     className={`px-4 py-2 rounded-lg text-sm border ${
                       videoSource === 'drive'
                         ? 'bg-gold text-background border-gold font-bold'
-                        : 'border-navy-border text-zinc-400'
+                        : 'border-navy-border text-zinc-500'
                     }`}
                   >
                     جوجل درايف
@@ -278,7 +278,7 @@ export default function ManageModulePage() {
               </div>
 
               <div>
-                <label className="block text-sm mb-1 text-zinc-300">
+                <label className="block text-sm mb-1 text-zinc-700">
                   {videoSource === 'youtube' ? 'رابط اليوتيوب' : 'رابط جوجل درايف (لازم يكون Anyone with the link)'}
                 </label>
                 <input
@@ -316,7 +316,7 @@ export default function ManageModulePage() {
                   </span>
                   <button
                     onClick={() => deleteVideo(v.id)}
-                    className="text-red-400 hover:text-red-300 text-sm"
+                    className="text-red-600 hover:text-red-300 text-sm"
                   >
                     حذف
                   </button>
@@ -333,7 +333,7 @@ export default function ManageModulePage() {
               className="bg-navy-card border border-navy-border rounded-xl p-6 space-y-4 mb-8"
             >
               <div>
-                <label className="block text-sm mb-1 text-zinc-300">عنوان الملف</label>
+                <label className="block text-sm mb-1 text-zinc-700">عنوان الملف</label>
                 <input
                   type="text"
                   value={materialTitle}
@@ -342,20 +342,20 @@ export default function ManageModulePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm mb-1 text-zinc-300">
+                <label className="block text-sm mb-1 text-zinc-700">
                   اضغط هنا لاختيار الملف من جهازك
                 </label>
                 <input
                   type="file"
                   onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  className="w-full text-sm text-zinc-300 bg-background border border-navy-border rounded-lg px-3 py-2"
+                  className="w-full text-sm text-zinc-700 bg-background border border-navy-border rounded-lg px-3 py-2"
                 />
                 {file && (
-                  <p className="text-xs text-green-400 mt-1">تم اختيار: {file.name}</p>
+                  <p className="text-xs text-green-600 mt-1">تم اختيار: {file.name}</p>
                 )}
               </div>
 
-              {uploadError && <p className="text-red-400 text-sm">{uploadError}</p>}
+              {uploadError && <p className="text-red-600 text-sm">{uploadError}</p>}
 
               <button
                 type="submit"
@@ -375,7 +375,7 @@ export default function ManageModulePage() {
                   <span>{m.title}</span>
                   <button
                     onClick={() => deleteMaterial(m.id)}
-                    className="text-red-400 hover:text-red-300 text-sm"
+                    className="text-red-600 hover:text-red-300 text-sm"
                   >
                     حذف
                   </button>
@@ -394,7 +394,7 @@ export default function ManageModulePage() {
               {!exam && (
                 <>
                   <div>
-                    <label className="block text-sm mb-1 text-zinc-300">عنوان الكويز</label>
+                    <label className="block text-sm mb-1 text-zinc-700">عنوان الكويز</label>
                     <input
                       type="text"
                       value={examTitle}
@@ -403,7 +403,7 @@ export default function ManageModulePage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm mb-1 text-zinc-300">المدة (دقيقة)</label>
+                    <label className="block text-sm mb-1 text-zinc-700">المدة (دقيقة)</label>
                     <input
                       type="number"
                       value={examDuration}
@@ -415,7 +415,7 @@ export default function ManageModulePage() {
               )}
 
               <div>
-                <label className="block text-sm mb-2 text-zinc-300">
+                <label className="block text-sm mb-2 text-zinc-700">
                   اختر الأسئلة من بنك أسئلة المادة
                 </label>
                 <div className="space-y-2 max-h-52 overflow-y-auto">
@@ -462,7 +462,7 @@ export default function ManageModulePage() {
                   <p className="font-medium">{exam.title}</p>
                   <p className="text-xs text-zinc-500">
                     {exam.is_published ? (
-                      <span className="text-green-400">منشور</span>
+                      <span className="text-green-600">منشور</span>
                     ) : (
                       'مسودة'
                     )}
@@ -472,7 +472,7 @@ export default function ManageModulePage() {
                   onClick={togglePublish}
                   className={`text-sm px-4 py-1.5 rounded-lg border transition ${
                     exam.is_published
-                      ? 'border-navy-border text-zinc-400'
+                      ? 'border-navy-border text-zinc-500'
                       : 'bg-gold text-background border-gold font-bold'
                   }`}
                 >

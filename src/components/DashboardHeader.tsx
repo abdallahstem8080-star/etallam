@@ -16,7 +16,7 @@ export default function DashboardHeader({
           <p className="text-xs text-zinc-500">{subtitle}</p>
         </div>
         <div className="flex items-center gap-4">
-          <h1 className="hidden sm:block text-sm text-zinc-300">{title}</h1>
+          <h1 className="hidden sm:block text-sm text-zinc-700">{title}</h1>
           <LogoutButton />
         </div>
       </div>

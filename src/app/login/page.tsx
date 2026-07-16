@@ -53,13 +53,13 @@ export default function LoginPage() {
 
       <div className="w-full max-w-sm bg-navy-card border border-navy-border rounded-xl shadow-lg p-8">
         <h1 className="text-xl font-bold text-center mb-1">تسجيل الدخول</h1>
-        <p className="text-center text-zinc-400 text-sm mb-6">
+        <p className="text-center text-zinc-500 text-sm mb-6">
           ادخل ببياناتك للمتابعة
         </p>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1 text-zinc-300">
+            <label className="block text-sm font-medium mb-1 text-zinc-700">
               البريد الإلكتروني
             </label>
             <input
@@ -72,7 +72,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1 text-zinc-300">
+            <label className="block text-sm font-medium mb-1 text-zinc-700">
               كلمة المرور
             </label>
             <input
@@ -84,7 +84,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p className="text-red-600 text-sm">{error}</p>}
 
           <button
             type="submit"
@@ -95,7 +95,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-zinc-400 mt-4">
+        <p className="text-center text-sm text-zinc-500 mt-4">
           مفيش حساب؟{' '}
           <Link href="/signup" className="text-gold hover:text-gold-light">
             سجل الآن

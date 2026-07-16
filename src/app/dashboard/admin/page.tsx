@@ -109,14 +109,14 @@ export default function AdminDashboard() {
                         setEditingId(s.id)
                         setEditingName(s.name)
                       }}
-                      className="text-sm text-zinc-400 hover:text-gold"
+                      className="text-sm text-zinc-500 hover:text-gold"
                     >
                       تعديل
                     </button>
                   )}
                   <button
                     onClick={() => deleteSubject(s.id)}
-                    className="text-sm text-red-400 hover:text-red-300"
+                    className="text-sm text-red-600 hover:text-red-300"
                   >
                     حذف
                   </button>

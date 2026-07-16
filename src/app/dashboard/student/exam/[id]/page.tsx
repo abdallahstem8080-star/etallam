@@ -86,7 +86,7 @@ export default function TakeExamPage() {
       <div className="min-h-screen flex flex-col flex-1 bg-background text-foreground">
         <DashboardHeader title="الامتحان" subtitle="Student" />
         <main className="flex-1 flex items-center justify-center px-4">
-          <p className="text-red-400 text-center">{error}</p>
+          <p className="text-red-600 text-center">{error}</p>
         </main>
       </div>
     )
@@ -97,7 +97,7 @@ export default function TakeExamPage() {
       <div className="min-h-screen flex flex-col flex-1 bg-background text-foreground">
         <DashboardHeader title="الامتحان" subtitle="Student" />
         <main className="flex-1 flex flex-col items-center justify-center px-4 gap-6">
-          <p className="text-zinc-400">تم تسليم الامتحان بنجاح</p>
+          <p className="text-zinc-500">تم تسليم الامتحان بنجاح</p>
           <p className="text-5xl font-extrabold text-gold-light">{result}%</p>
           <button
             onClick={() => router.push('/dashboard/student')}
