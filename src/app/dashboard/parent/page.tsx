@@ -12,6 +12,7 @@ type Submission = {
   submitted_at: string
 }
 type Exam = { id: string; title: string }
+type AttendanceRecord = { status: string; session_date: string; group_name: string }
 
 export default function ParentDashboard() {
   const supabase = createClient()
@@ -23,6 +24,9 @@ export default function ParentDashboard() {
     Record<string, Submission[]>
   >({})
   const [exams, setExams] = useState<Exam[]>([])
+  const [attendanceByStudent, setAttendanceByStudent] = useState<
+    Record<string, AttendanceRecord[]>
+  >({})
   const [loading, setLoading] = useState(true)
 
   async function loadChildren() {
@@ -70,6 +74,40 @@ export default function ParentDashboard() {
         .in('id', examIds)
       setExams(exs ?? [])
     }
+
+    const attMap: Record<string, AttendanceRecord[]> = {}
+    for (const sid of studentIds) {
+      const { data: att } = await supabase
+        .from('attendance')
+        .select('status, session_id')
+        .eq('student_id', sid)
+
+      if (att && att.length > 0) {
+        const { data: sessionsData } = await supabase
+          .from('sessions')
+          .select('id, session_date, group_id')
+          .in('id', att.map((a) => a.session_id))
+
+        const groupIds = [...new Set((sessionsData ?? []).map((s) => s.group_id))]
+        const { data: groupsData } = await supabase
+          .from('groups')
+          .select('id, name')
+          .in('id', groupIds)
+
+        attMap[sid] = att.map((a) => {
+          const session = sessionsData?.find((s) => s.id === a.session_id)
+          const group = groupsData?.find((g) => g.id === session?.group_id)
+          return {
+            status: a.status,
+            session_date: session?.session_date ?? '',
+            group_name: group?.name ?? '',
+          }
+        })
+      } else {
+        attMap[sid] = []
+      }
+    }
+    setAttendanceByStudent(attMap)
 
     setLoading(false)
   }
@@ -142,7 +180,7 @@ export default function ParentDashboard() {
                 {(submissionsByStudent[st.id] ?? []).length === 0 ? (
                   <p className="text-sm text-zinc-500">مفيش نتايج امتحانات لسه.</p>
                 ) : (
-                  <ul className="space-y-2">
+                  <ul className="space-y-2 mb-4">
                     {submissionsByStudent[st.id].map((sub) => (
                       <li
                         key={sub.id}
@@ -155,6 +193,31 @@ export default function ParentDashboard() {
                       </li>
                     ))}
                   </ul>
+                )}
+
+                {(attendanceByStudent[st.id] ?? []).length > 0 && (
+                  <div>
+                    <p className="text-xs text-zinc-500 mb-2 mt-3">سجل الحضور</p>
+                    <ul className="space-y-1">
+                      {attendanceByStudent[st.id].slice(0, 5).map((a, i) => (
+                        <li
+                          key={i}
+                          className="flex justify-between text-xs border-t border-navy-border pt-1.5"
+                        >
+                          <span className="text-zinc-500">
+                            {a.group_name} — {a.session_date}
+                          </span>
+                          <span
+                            className={
+                              a.status === 'present' ? 'text-green-600' : 'text-red-600'
+                            }
+                          >
+                            {a.status === 'present' ? 'حاضر 🟢' : 'غائب 🔴'}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             ))}

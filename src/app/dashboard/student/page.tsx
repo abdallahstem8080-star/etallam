@@ -60,12 +60,20 @@ export default function StudentDashboard() {
       <main className="flex-1 px-6 sm:px-12 py-10 max-w-3xl mx-auto w-full">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">الامتحانات المتاحة</h2>
-          <Link
-            href="/dashboard/student/courses"
-            className="text-sm border border-gold text-gold px-4 py-2 rounded-lg hover:bg-gold hover:text-background transition"
-          >
-            الكورسات
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href="/dashboard/student/schedule"
+              className="text-sm border border-gold text-gold px-4 py-2 rounded-lg hover:bg-gold hover:text-background transition"
+            >
+              جدول حصصي
+            </Link>
+            <Link
+              href="/dashboard/student/courses"
+              className="text-sm border border-gold text-gold px-4 py-2 rounded-lg hover:bg-gold hover:text-background transition"
+            >
+              الكورسات
+            </Link>
+          </div>
         </div>
 
         {loading ? (

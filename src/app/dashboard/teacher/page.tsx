@@ -26,10 +26,11 @@ type Course = {
   description: string | null
   subject_id: string
 }
+type Group = { id: string; name: string; subject_id: string }
 
 export default function TeacherDashboard() {
   const supabase = createClient()
-  const [tab, setTab] = useState<'questions' | 'exams' | 'courses'>('questions')
+  const [tab, setTab] = useState<'questions' | 'exams' | 'courses' | 'groups'>('questions')
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [exams, setExams] = useState<Exam[]>([])
@@ -40,6 +41,10 @@ export default function TeacherDashboard() {
   const [courseDesc, setCourseDesc] = useState('')
   const [courseSubject, setCourseSubject] = useState('')
   const [pendingCount, setPendingCount] = useState<Record<string, number>>({})
+
+  const [groups, setGroups] = useState<Group[]>([])
+  const [groupName, setGroupName] = useState('')
+  const [groupSubject, setGroupSubject] = useState('')
 
   const [qText, setQText] = useState('')
   const [choices, setChoices] = useState(['', '', '', ''])
@@ -57,6 +62,7 @@ export default function TeacherDashboard() {
       setSelectedSubject(subs[0].id)
       setExamSubject(subs[0].id)
       setCourseSubject(subs[0].id)
+      setGroupSubject(subs[0].id)
     }
 
     const { data: qs } = await supabase
@@ -96,6 +102,30 @@ export default function TeacherDashboard() {
       })
       setPendingCount(counts)
     }
+
+    const { data: grps } = await supabase
+      .from('groups')
+      .select('id, name, subject_id')
+      .eq('teacher_id', user?.id)
+    setGroups(grps ?? [])
+  }
+
+  async function createGroup(e: React.FormEvent) {
+    e.preventDefault()
+    if (!groupName.trim() || !groupSubject) return
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    await supabase.from('groups').insert({
+      name: groupName.trim(),
+      subject_id: groupSubject,
+      teacher_id: user?.id,
+    })
+
+    setGroupName('')
+    loadAll()
   }
 
   async function createCourse(e: React.FormEvent) {
@@ -221,6 +251,16 @@ export default function TeacherDashboard() {
             }`}
           >
             الكورسات
+          </button>
+          <button
+            onClick={() => setTab('groups')}
+            className={`px-5 py-2 rounded-lg text-sm border transition ${
+              tab === 'groups'
+                ? 'bg-gold text-white border-gold font-bold'
+                : 'border-navy-border text-zinc-500'
+            }`}
+          >
+            المجموعات
           </button>
         </div>
 
@@ -507,6 +547,70 @@ export default function TeacherDashboard() {
                         {pendingCount[c.id]}
                       </span>
                     )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {tab === 'groups' && (
+          <div>
+            <h2 className="text-xl font-bold mb-4">إنشاء مجموعة جديدة</h2>
+            <form
+              onSubmit={createGroup}
+              className="bg-navy-card border border-navy-border rounded-xl p-6 space-y-4 mb-8"
+            >
+              <div>
+                <label className="block text-sm mb-1 text-zinc-700">اسم المجموعة</label>
+                <input
+                  type="text"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  placeholder="مثال: مجموعة السبت والأربعاء - 4 عصرًا"
+                  className="w-full bg-background border border-navy-border rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1 text-zinc-700">المادة</label>
+                <select
+                  value={groupSubject}
+                  onChange={(e) => setGroupSubject(e.target.value)}
+                  className="w-full bg-background border border-navy-border rounded-lg px-3 py-2"
+                >
+                  {subjects.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="submit"
+                className="bg-gold text-background font-bold px-6 py-2 rounded-lg hover:bg-gold-light transition"
+              >
+                إنشاء المجموعة
+              </button>
+            </form>
+
+            <h3 className="text-lg font-bold mb-3">مجموعاتي</h3>
+            <ul className="space-y-2">
+              {groups.map((g) => (
+                <li
+                  key={g.id}
+                  className="flex justify-between items-center bg-navy-card border border-navy-border rounded-lg px-4 py-3"
+                >
+                  <div>
+                    <p className="font-medium">{g.name}</p>
+                    <p className="text-xs text-zinc-500">
+                      {subjects.find((s) => s.id === g.subject_id)?.name}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/dashboard/teacher/group/${g.id}`}
+                    className="text-sm bg-gold text-background font-bold px-4 py-1.5 rounded-lg hover:bg-gold-light transition"
+                  >
+                    إدارة المجموعة
                   </Link>
                 </li>
               ))}
