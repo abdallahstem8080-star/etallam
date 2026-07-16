@@ -14,6 +14,7 @@ type ExamRow = { id: string; title: string; submissionCount: number }
 const sidebarItems = [
   { key: 'overview', label: 'الإحصائيات', icon: '📊' },
   { key: 'teachers', label: 'إدارة المدرسين', icon: '👨‍🏫' },
+  { key: 'students', label: 'إدارة الطلاب', icon: '🎓' },
   { key: 'courses', label: 'الكورسات والدروس', icon: '📚' },
   { key: 'groups', label: 'المجموعات والجداول', icon: '🗓️' },
   { key: 'quizzes', label: 'الكويزات والـ QR', icon: '🧾' },
@@ -38,6 +39,13 @@ export default function AdminDashboard() {
   const [newSubject, setNewSubject] = useState('')
   const [qrExamId, setQrExamId] = useState<string | null>(null)
   const [siteUrl, setSiteUrl] = useState('')
+
+  const [newName, setNewName] = useState('')
+  const [newEmail, setNewEmail] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState('')
+  const [createSuccess, setCreateSuccess] = useState('')
 
   async function loadAll() {
     setLoading(true)
@@ -126,6 +134,42 @@ export default function AdminDashboard() {
   async function deleteProfile(id: string) {
     if (!confirm('حذف الحساب ده نهائيًا من قاعدة البيانات؟')) return
     await supabase.from('profiles').delete().eq('id', id)
+    loadAll()
+  }
+
+  async function createAccount(e: React.FormEvent, role: 'teacher' | 'student' | 'parent') {
+    e.preventDefault()
+    setCreateError('')
+    setCreateSuccess('')
+
+    if (!newName.trim() || !newEmail.trim() || !newPassword.trim()) {
+      setCreateError('اكتب كل البيانات المطلوبة')
+      return
+    }
+
+    setCreating(true)
+    const res = await fetch('/api/admin/create-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: newName.trim(),
+        email: newEmail.trim(),
+        password: newPassword,
+        role,
+      }),
+    })
+    const data = await res.json()
+    setCreating(false)
+
+    if (!res.ok) {
+      setCreateError(data.error ?? 'حصل خطأ')
+      return
+    }
+
+    setCreateSuccess(`تم إنشاء الحساب بنجاح (${newName})`)
+    setNewName('')
+    setNewEmail('')
+    setNewPassword('')
     loadAll()
   }
 
@@ -231,24 +275,44 @@ export default function AdminDashboard() {
 
               {tab === 'teachers' && (
                 <div>
-                  <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
-                    <p className="text-sm text-gray-600 mb-3">
-                      عشان تضيف مدرس جديد، ابعتله رابط التسجيل ده، وهيظهرلك تلقائيًا في الليستة تحت بعد ما يسجل:
-                    </p>
-                    <div className="flex gap-2">
+                  <form
+                    onSubmit={(e) => createAccount(e, 'teacher')}
+                    className="bg-white border border-gray-200 rounded-xl p-5 mb-6 space-y-3"
+                  >
+                    <h3 className="font-bold mb-2">إنشاء حساب معلم جديد مباشرة</h3>
+                    <div className="grid sm:grid-cols-2 gap-3">
                       <input
-                        readOnly
-                        value={`${siteUrl}/signup`}
-                        className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                        type="text"
+                        placeholder="الاسم"
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm"
                       />
-                      <button
-                        onClick={() => navigator.clipboard.writeText(`${siteUrl}/signup`)}
-                        className="bg-[#990033] text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-[#7a0029] transition"
-                      >
-                        نسخ الرابط
-                      </button>
+                      <input
+                        type="email"
+                        placeholder="البريد الإلكتروني"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                      />
+                      <input
+                        type="password"
+                        placeholder="كلمة المرور"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm sm:col-span-2"
+                      />
                     </div>
-                  </div>
+                    {createError && <p className="text-red-600 text-sm">{createError}</p>}
+                    {createSuccess && <p className="text-green-600 text-sm">{createSuccess}</p>}
+                    <button
+                      type="submit"
+                      disabled={creating}
+                      className="bg-[#990033] text-white text-sm font-bold px-5 py-2 rounded-lg hover:bg-[#7a0029] transition disabled:opacity-50"
+                    >
+                      {creating ? 'جاري الإنشاء...' : 'إنشاء حساب المعلم'}
+                    </button>
+                  </form>
 
                   <ul className="space-y-2">
                     {teachers.map((t) => (
@@ -270,6 +334,72 @@ export default function AdminDashboard() {
                     ))}
                     {teachers.length === 0 && (
                       <p className="text-gray-400 text-sm">مفيش معلمين مسجلين لسه.</p>
+                    )}
+                  </ul>
+                </div>
+              )}
+
+              {tab === 'students' && (
+                <div>
+                  <form
+                    onSubmit={(e) => createAccount(e, 'student')}
+                    className="bg-white border border-gray-200 rounded-xl p-5 mb-6 space-y-3"
+                  >
+                    <h3 className="font-bold mb-2">إنشاء حساب طالب جديد مباشرة</h3>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <input
+                        type="text"
+                        placeholder="الاسم"
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                      />
+                      <input
+                        type="email"
+                        placeholder="البريد الإلكتروني"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                      />
+                      <input
+                        type="password"
+                        placeholder="كلمة المرور"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm sm:col-span-2"
+                      />
+                    </div>
+                    {createError && <p className="text-red-600 text-sm">{createError}</p>}
+                    {createSuccess && <p className="text-green-600 text-sm">{createSuccess}</p>}
+                    <button
+                      type="submit"
+                      disabled={creating}
+                      className="bg-[#990033] text-white text-sm font-bold px-5 py-2 rounded-lg hover:bg-[#7a0029] transition disabled:opacity-50"
+                    >
+                      {creating ? 'جاري الإنشاء...' : 'إنشاء حساب الطالب'}
+                    </button>
+                  </form>
+
+                  <ul className="space-y-2">
+                    {students.map((s) => (
+                      <li
+                        key={s.id}
+                        className="flex justify-between items-center bg-white border border-gray-200 rounded-lg px-4 py-3"
+                      >
+                        <div>
+                          <p className="font-medium">{s.name}</p>
+                          <p className="text-xs text-gray-400">{s.email}</p>
+                        </div>
+                        <button
+                          onClick={() => deleteProfile(s.id)}
+                          className="text-red-600 hover:text-red-500 text-sm"
+                        >
+                          حذف
+                        </button>
+                      </li>
+                    ))}
+                    {students.length === 0 && (
+                      <p className="text-gray-400 text-sm">مفيش طلاب مسجلين لسه.</p>
                     )}
                   </ul>
                 </div>
