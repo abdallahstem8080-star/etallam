@@ -69,6 +69,10 @@ export default function CoursePlayerPage() {
   const [userName, setUserName] = useState('')
   const [avatarOpen, setAvatarOpen] = useState(false)
 
+  const [aiSummary, setAiSummary] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState('')
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -185,6 +189,8 @@ export default function CoursePlayerPage() {
     async function loadVideoExtras() {
       if (!activeVideo) return
       setContentTab('files')
+      setAiSummary(null)
+      setAiError('')
 
       const { data: mats } = await supabase
         .from('course_materials')
@@ -193,10 +199,47 @@ export default function CoursePlayerPage() {
       setMaterials(mats ?? [])
 
       await loadComments(activeVideo.id)
+
+      // نشوف هل فيه ملخص محفوظ بالفعل
+      const { data: existingSummary } = await supabase
+        .from('video_summaries')
+        .select('summary')
+        .eq('video_id', activeVideo.id)
+        .maybeSingle()
+      if (existingSummary) setAiSummary(existingSummary.summary)
     }
     loadVideoExtras()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeVideo])
+
+  async function generateSummary() {
+    if (!activeVideo) return
+    setAiError('')
+
+    if (activeVideo.video_source !== 'youtube') {
+      setAiError('الملخص الذكي متاح لفيديوهات يوتيوب بس حاليًا')
+      return
+    }
+
+    setAiLoading(true)
+    const res = await fetch('/api/ai/summarize-video', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        videoId: activeVideo.id,
+        youtubeUrl: activeVideo.youtube_url,
+        title: activeVideo.title,
+      }),
+    })
+    const data = await res.json()
+    setAiLoading(false)
+
+    if (!res.ok) {
+      setAiError(data.error ?? 'حصل خطأ')
+      return
+    }
+    setAiSummary(data.summary)
+  }
 
   async function loadComments(videoId: string) {
     const { data: cms } = await supabase
@@ -527,10 +570,26 @@ export default function CoursePlayerPage() {
               )}
 
               {contentTab === 'ai' && (
-                <div className="bg-white border border-[#E2E8F0] rounded-lg px-6 py-8 text-center">
-                  <p className="text-[#475569] text-sm">
-                    ✨ ميزة الملخص الذكي هتتفعل قريبًا في مرحلة الذكاء الاصطناعي بالمنصة.
-                  </p>
+                <div className="bg-white border border-[#E2E8F0] rounded-lg px-6 py-6">
+                  {aiSummary ? (
+                    <div className="text-sm text-[#334155] leading-relaxed whitespace-pre-wrap">
+                      {aiSummary}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <p className="text-[#475569] text-sm mb-4">
+                        ✨ لسه مفيش ملخص للفيديو ده، تقدر تولّده دلوقتي
+                      </p>
+                      {aiError && <p className="text-red-600 text-sm mb-3">{aiError}</p>}
+                      <button
+                        onClick={generateSummary}
+                        disabled={aiLoading}
+                        className="bg-[#D97706] text-white font-bold px-6 py-2 rounded-lg hover:bg-[#B45309] transition disabled:opacity-50"
+                      >
+                        {aiLoading ? 'جاري توليد الملخص...' : 'توليد ملخص الفيديو'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
