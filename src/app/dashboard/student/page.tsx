@@ -20,6 +20,8 @@ export default function StudentDashboard() {
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
+  const [studentCode, setStudentCode] = useState('')
+  const [siteUrl, setSiteUrl] = useState('')
 
   async function loadAll() {
     setLoading(true)
@@ -41,6 +43,14 @@ export default function StudentDashboard() {
       .select('exam_id, score')
       .eq('student_id', user?.id)
     setSubmissions(subm ?? [])
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('student_code')
+      .eq('id', user?.id)
+      .single()
+    setStudentCode(profile?.student_code ?? '')
+    setSiteUrl(window.location.origin)
 
     setLoading(false)
   }
@@ -75,6 +85,30 @@ export default function StudentDashboard() {
             </Link>
           </div>
         </div>
+
+        {studentCode && (
+          <div className="bg-navy-card border border-navy-border rounded-xl p-5 mb-6">
+            <p className="text-sm font-bold mb-2">📤 تابع مستواك مع والديك</p>
+            <p className="text-xs text-zinc-500 mb-3">
+              ابعت الرابط ده لولي أمرك، هيقدر يتابع نتايجك وحضورك بدون ما يعمل حساب:
+            </p>
+            <div className="flex gap-2">
+              <input
+                readOnly
+                value={`${siteUrl}/follow/${studentCode}`}
+                className="flex-1 bg-background border border-navy-border rounded-lg px-3 py-2 text-xs"
+              />
+              <button
+                onClick={() =>
+                  navigator.clipboard.writeText(`${siteUrl}/follow/${studentCode}`)
+                }
+                className="bg-gold text-background text-sm font-bold px-4 py-2 rounded-lg hover:bg-gold-light transition"
+              >
+                نسخ
+              </button>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <p className="text-zinc-500">جاري التحميل...</p>
